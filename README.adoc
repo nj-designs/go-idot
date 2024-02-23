@@ -1,0 +1,230 @@
+= Go iDot
+Doc Writer <nj.designs@protonmail.com>
+:toc:
+:experimental:
+
+== Introduction
+
+For a separate project, I have the need to display custom information on one of those cheap Aliexpress 32x32 iDotMatrix displays.
+
+I initially went down the path of reverse engineering the link:https://play.google.com/store/apps/details?id=com.tech.idotmatrix&pcampaignid=web_share[iDotMatrix Android App], however after making some progress I found that link:https://github.com/derkalle4[derkalle4] has already made way more progress with their link:https://github.com/derkalle4/python3-idotmatrix-client[python3-idotmatrix-client] project.
+
+This repo contains a *go* implementation of a IDotMatrix client based on the excellent work of link:https://github.com/derkalle4[derkalle4] and the other contributors. So a big thanks to them all.
+
+At this point, I don't need any functionality other than what's currently implemented (see below). However, I'm open to PRs if any gophers wish to contribute.
+
+
+== Building
+
+There's a simple CLI program to allow you to interact with your iDotMatrix display.
+
+To build, simply run ``go build -o go-idot main.go`` in the root of this repo.
+
+== Usage
+
+To get a full list of supported commands, run ``./go-idot --help``.
+
+.Top level help output
+[source,bash]
+----
+➜  go-idot git:(main) ✗ ./go-idot --help
+A simple CLI application to interact with iDot displays
+
+Usage:
+  go-idot [command]
+
+Available Commands:
+  btscan      Displays a list of bluetooth devices that can be seen by the local adapter
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  showclock   Shows and optionally configures the clock of the iDot display
+  showimage   Shows the supplied .png file on the iDot display
+  startserver Start a simple rest API server
+
+Flags:
+  -h, --help   help for go-idot
+
+Use "go-idot [command] --help" for more information about a command.
+➜  go-idot git:(main) ✗
+----
+
+=== btscan
+
+This sub commands allows you to scan for nearby Bluetooth devices to find the *MAC* of your iDotMatrix display. Look for a device with a name starting with *IDM-*.
+
+.btscan help output
+[source,bash]
+----
+➜  go-idot git:(main) ✗ ./go-idot btscan --help
+Displays a list of bluetooth devices that can be seen by the local adapter
+
+Usage:
+  go-idot btscan [flags]
+
+Flags:
+  -h, --help               help for btscan
+      --scan-time uint32   Max number of seconds to perform scan. 0 means infinite
+      --verbose            Verbose output during scan
+➜  go-idot git:(main) ✗
+----
+
+.btscan example
+[source,bash]
+----
+➜  go-idot git:(main) ✗ ./go-idot btscan --scan-time 10
+Scanning for 10 second(s)
+Scan results
+Address:CC:E6:BA:14:F8:EA  RSSI:  0  Name:BT5.0 Mouse
+Address:60:81:6E:82:50:58  RSSI:-54  Name:IDM-825058
+Address:47:EC:47:FD:E0:4B  RSSI:-60  Name:
+Address:3C:E0:02:9A:CD:90  RSSI:-92  Name:
+Address:DC:2C:26:3A:C2:58  RSSI:  0  Name:Keychron K2
+➜  go-idot git:(main) ✗
+----
+
+=== showclock
+
+This sub command allows you do put the iDotMatrix display in to clock mode and configure what that clock looks like.
+
+.showclock help output
+[source,bash]
+----
+➜  go-idot git:(main) ✗ ./go-idot showclock --help
+Shows and optionally configures the clock of the iDot display
+
+Usage:
+  go-idot showclock [flags]
+
+Flags:
+      --24hour          Show time in 24 hour format (default true)
+  -h, --help            help for showclock
+      --show-date       Show date as well as time (default true)
+      --style int       Style of clock. 0:Default 1:Christmas 2:Racing 3:Inverted 4:Hour Glass (default 4)
+      --target string   Target iDot display MAC address
+      --time string     Time value in RFC1123Z format. As per 'date -R'
+➜  go-idot git:(main) ✗
+----
+
+In it's most basic usage, you simply need to supply the ``--target`` option specifying the *MAC* address as found in *btscan*.
+
+.showclock to set current wall time wihh default display values
+[source,bash]
+----
+➜  go-idot git:(main) ✗ ./go-idot showclock --target 60:81:6E:82:50:58
+➜  go-idot git:(main) ✗
+----
+
+.showclock to set a specific time
+[source,bash]
+----
+➜  go-idot git:(main) ✗ ./go-idot showclock --target 60:81:6E:82:50:58 --time "Thu, 21 Feb 2024 07:30:36 +0000"
+➜  go-idot git:(main) ✗
+----
+
+=== showimage
+
+This sub command allows you to show arbitrary (see known limitations below) images on the display.
+
+.showimage help output
+[source,bash]
+----
+➜  go-idot git:(main) ✗ ./go-idot showimage --help
+Shows the supplied .png file on the iDot display
+
+Usage:
+  go-idot showimage [flags]
+
+Flags:
+  -h, --help                help for showimage
+      --image-file string   Path to a 32x32 .png image file
+      --target string       Target iDot display MAC address
+➜  go-idot git:(main) ✗
+----
+
+To display an image, simply supply its path using the *--image-file* argument
+
+.Show an image
+[source,bash]
+----
+./go-idot showimage --target 60:81:6E:82:50:58 --image-file testdata/demo_32.png
+----
+
+=== startserver
+
+This sub commands starts up a simple RESTful API server that allows the above operation to be remotely invoked.
+
+.startserver help output
+[source,bash]
+----
+➜  go-idot git:(main) ✗ ./go-idot startserver --help
+Start a simple rest API server
+
+Usage:
+  go-idot startserver [flags]
+
+Flags:
+  -h, --help            help for startserver
+      --port uint       Port to listen on (default 8080)
+      --target string   Target iDot display MAC address
+➜  go-idot git:(main) ✗
+----
+
+To start server listening on default port of *8080*, kbd:[Ctrl+C] to quit.
+
+NOTE: The server maintains a Bluetooth connection whilst running.
+
+[source,bash]
+----
+➜  go-idot git:(main) ✗ ./go-idot startserver --target 60:81:6E:82:50:58
+Connecting to 60:81:6E:82:50:58
+Connected
+Listing at :8080
+----
+
+==== showclock RESTful endpoint
+
+The endpoint at */api/v1/showclock* provides a means to show the clock.
+
+To use it, *POST* a *json* document as shown below. The fields match the arguments of the *showclock* sub command.
+
+.json shown will default values
+[source,json]
+----
+{
+  "time"     :"",
+  "style"    :0,
+  "showdate" :false,
+  "show24h"  :false
+}
+----
+
+.Set the clock to the current wall time with default values (i.e. empty document)
+[source,bash]
+----
+curl -X POST -H "Content-Type: application/json"  http://localhost:8080/api/v1/showclock
+----
+
+.Set the clock to the specified time, show date, and display time in 24h format
+[source,bash]
+----
+curl -X POST -H "Content-Type: application/json" -d '{"time":"Tue, 20 Feb 2024 16:23:07 +0000", "showdate": true, "show24h": true}' http://localhost:8080/api/v1/showclock
+----
+
+==== showimage RESTful endpoint
+
+The endpoint at */api/v1/showimage* provides a means to display an image.
+
+To use it, *POST* a *form* specifying the image file to be uploaded.
+
+.Image upload
+[source,bash]
+----
+curl -F "imgfile=@testdata/doll_32.png;type=image/png" http://localhost:8080/api/v1/showimage
+----
+
+== Known Limitations & Issues
+
+* Currently only using the default Bluetooth adapter.
+* Only tested with 32x32 iDotMatrix display. Showimage checks that image is 32x32.
+* Only test on Linux
+* Fix issue where write MTU gets incorrectly discovered, currently I override it to 514 in ```func (d *Device) Write(packet []byte) error```
