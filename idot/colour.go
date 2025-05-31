@@ -51,4 +51,4 @@ func ColourFromString(rgb string) (Colour, error) {
     return Colour{uint8(r), uint8(g), uint8(b)}, nil
 }
 
-var ErrInvalidRGB = errors.New("RGB inválido, use o formato 'R, G, B'")
+var ErrInvalidRGB = errors.New("Invalid RGB value. Please use the format 'R, G, B'.")
