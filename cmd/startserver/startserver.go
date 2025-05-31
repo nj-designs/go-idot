@@ -61,7 +61,7 @@ func init() {
 	Cmd.Flags().StringVar(&targetAddr, "target", "", "Target iDot display MAC address")
 	Cmd.MarkFlagRequired("target")
 
-	Cmd.Flags().UintVar(&serverPort, "port", 8080, "Port to listen on")
+	Cmd.Flags().UintVar(&serverPort, "port", 8787, "Port to listen on")
 }
 
 func runServer() error {
@@ -116,6 +116,7 @@ type setClockValues struct {
 	Style    int    `json:"style,omitempty"`
 	ShowDate bool   `json:"showdate,omitempty"`
 	Show24h  bool   `json:"show24h,omitempty"`
+	Colour  string   `json:"colour,omitempty"`
 }
 
 func (ids *iDotService) handleShowClock(w http.ResponseWriter, req *http.Request) {
@@ -144,8 +145,8 @@ func (ids *iDotService) handleShowClock(w http.ResponseWriter, req *http.Request
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	if err := ids.device.SetClockMode(cv.Style, cv.ShowDate, cv.Show24h, idot.Blue); err != nil {
+	customColour, err := idot.ColourFromString(cv.Colour)
+	if err := ids.device.SetClockMode(cv.Style, cv.ShowDate, cv.Show24h, customColour); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

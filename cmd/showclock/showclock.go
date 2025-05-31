@@ -32,6 +32,7 @@ import (
 var clockStyle int
 var showDate bool
 var show24h bool
+var colour string
 var timeValue string
 var targetAddr string
 
@@ -52,6 +53,7 @@ func init() {
 	Cmd.Flags().IntVar(&clockStyle, "style", idot.ClockAnimatedHourGlass, "Style of clock. 0:Default 1:Christmas 2:Racing 3:Inverted 4:Hour Glass")
 	Cmd.Flags().BoolVar(&showDate, "show-date", true, "Show date as well as time")
 	Cmd.Flags().BoolVar(&show24h, "24hour", true, "Show time in 24 hour format")
+	Cmd.Flags().StringVar(&colour, "colour", "", "Set RGB colour of clock. Format: R,G,B (0-255)")
 }
 
 func doSetClock() error {
@@ -89,8 +91,8 @@ func doSetClock() error {
 		t.Minute(), t.Second()); err != nil {
 		return err
 	}
-
-	if err := device.SetClockMode(clockStyle, showDate, show24h, idot.Blue); err != nil {
+	customColour, err := idot.ColourFromString(colour)
+	if err := device.SetClockMode(clockStyle, showDate, show24h, customColour); err != nil {
 		return err
 	}
 
