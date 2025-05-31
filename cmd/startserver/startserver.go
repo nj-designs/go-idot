@@ -61,7 +61,7 @@ func init() {
 	Cmd.Flags().StringVar(&targetAddr, "target", "", "Target iDot display MAC address")
 	Cmd.MarkFlagRequired("target")
 
-	Cmd.Flags().UintVar(&serverPort, "port", 8787, "Port to listen on")
+	Cmd.Flags().UintVar(&serverPort, "port", 8080, "Port to listen on")
 }
 
 func runServer() error {
