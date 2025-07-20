@@ -21,6 +21,12 @@ THE SOFTWARE.
 */
 package idot
 
+import (
+	"errors"
+    "strconv"
+    "strings"
+)
+
 type Colour struct {
 	R, G, B uint8
 }
@@ -28,3 +34,21 @@ type Colour struct {
 var Red = Colour{255, 0, 0}
 var Green = Colour{0, 255, 0}
 var Blue = Colour{0, 0, 255}
+
+
+
+func ColourFromString(rgb string) (Colour, error) {
+    parts := strings.Split(rgb, ",")
+    if len(parts) != 3 {
+        return Colour{}, ErrInvalidRGB
+    }
+    r, err1 := strconv.Atoi(strings.TrimSpace(parts[0]))
+    g, err2 := strconv.Atoi(strings.TrimSpace(parts[1]))
+    b, err3 := strconv.Atoi(strings.TrimSpace(parts[2]))
+    if err1 != nil || err2 != nil || err3 != nil {
+        return Colour{}, ErrInvalidRGB
+    }
+    return Colour{uint8(r), uint8(g), uint8(b)}, nil
+}
+
+var ErrInvalidRGB = errors.New("Invalid RGB value. Please use the format 'R, G, B'.")
